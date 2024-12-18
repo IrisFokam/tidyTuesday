@@ -5,7 +5,7 @@ editor: visual
 ---
 
 
-```{r message=FALSE, results='hide'}
+```{r message=FALSE, results='hide', warning=FALSE}
 library(janitor)
 library(dplyr)
 library(tidyverse)
