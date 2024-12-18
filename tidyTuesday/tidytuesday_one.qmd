@@ -5,24 +5,6 @@ editor: visual
 ---
 
 
-```{r include = FALSE}
-# OPTIONAL: Set a more color blind friendly palette 
-palette("Okabe-Ito")
-scale_colour_discrete <- function(...) scale_colour_manual(values = palette())
-scale_fill_discrete   <- function(...) scale_fill_manual(values = palette())
-
-knitr::opts_chunk$set(
-  collapse = TRUE, 
-  warning = FALSE,
-  message = FALSE,
-  fig.height = 2.75, 
-  fig.width = 4.25,
-  fig.env='figure',
-  fig.pos = 'h',
-  fig.align = 'center')
-```
-
-
 ```{r message=FALSE, results='hide'}
 library(janitor)
 library(dplyr)
@@ -31,10 +13,10 @@ library(ggplot2)
 library(tidytuesdayR)
 ```
 
-
 ## Data import and cleaning
 
 <details>
+
 <summary>View Code</summary>
 
 ```{r results='hide', message=FALSE}
@@ -52,29 +34,17 @@ stackoverflow_survey %>% summary()
 
 </details>
 
-
-
 ### About the data
 
-This week's dataset is derived from the 2024 Stack Overflow Annual Developer Survey. Conducted in May 2024, the survey gathered responses from over 65,000 developers across seven key sections:
-* Basic information
-* Education, work, and career
-* Tech and tech culture
-* Stack overflow community
-* Artificial intelligense (AI)
-* Professional developper Series - Not part of the main survey
-* Thoughts in survey
-
-
+This week's dataset is derived from the 2024 Stack Overflow Annual Developer Survey. Conducted in May 2024, the survey gathered responses from over 65,000 developers across seven key sections: \* Basic information \* Education, work, and career \* Tech and tech culture \* Stack overflow community \* Artificial intelligense (AI) \* Professional developper Series - Not part of the main survey \* Thoughts in survey
 
 ### What is the distribution of the responders in terms of Ed level, coding level, and years of coding
 
-- Education levels range from 1 to 8, with 2 and 3 being the most common among responders.
-- Professional coding level range from 1 to 5, with 1 being the most common.
-- Number of years responders have spent coding ranges from 0 to more than 50, with the most commone number of years being between 5 and 20.
+-   Education levels range from 1 to 8, with 2 and 3 being the most common among responders.
+-   Professional coding level range from 1 to 5, with 1 being the most common.
+-   Number of years responders have spent coding ranges from 0 to more than 50, with the most commone number of years being between 5 and 20.
 
-<details>
-<summary>View Code</summary>
+
 
 ```{r}
 stackoverflow_survey %>%
@@ -99,16 +69,15 @@ stackoverflow_survey %>%
        y = "Count")
 ```
 
-</details>
+
 
 ### What is the relation between education level and years of coding, and professional coding level
 
-- Those with the lowest number of coding years, below 10 years, mostly have education level of 4,6, 7 and 8.
-- Participants with a level 5 education level have a more evenly distributed number of coding years.
-- Participants with the least number of Pro-coding years of 1, mostly have education level of 2,3 and 7.
+-   Those with the lowest number of coding years, below 10 years, mostly have education level of 4,6, 7 and 8.
+-   Participants with a level 5 education level have a more evenly distributed number of coding years.
+-   Participants with the least number of Pro-coding years of 1, mostly have education level of 2,3 and 7.
 
-<details>
-<summary>View Code</summary>
+
 
 ```{r}
 stackoverflow_survey %>% 
@@ -124,17 +93,15 @@ stackoverflow_survey %>%
   
 ```
 
-</details>
 
 
 ### How does number of coding years relate to stackoverflow particpation frequency and feeling of connectedness with the so community?
 
-- Responders with the highest level of stack overflow participation of 6 are mostly those with between 10 and 35 years of coding experience. 
-- Responders with the coding years above 30 are somewhat evenly distributed at the level of so participation frequency
-- Responders who consider themselves member of the SO community at the highest level of 6 are mostly in the years of coding range of between 5 and 20.
+-   Responders with the highest level of stack overflow participation of 6 are mostly those with between 10 and 35 years of coding experience.
+-   Responders with the coding years above 30 are somewhat evenly distributed at the level of so participation frequency
+-   Responders who consider themselves member of the SO community at the highest level of 6 are mostly in the years of coding range of between 5 and 20.
 
-<details>
-<summary>View Code</summary>
+
 
 ```{r}
 stackoverflow_survey %>% 
@@ -150,16 +117,13 @@ stackoverflow_survey %>%
   labs(x = "Feelings about being part of the SO community", y = "Number of coding years", title = "Feelings about being part of the Stack overflow community by number of coding years")
 ```
 
-</details>
 
 
 ### How does number of coding years affect stack overflow participation levels and how is this reflected in how responders feel a belonging to the stack overflow community?
 
-- Among responders with lower participation frequency, we see fewer people feeling less connected to the stack overflow community for number of coding years below 30, and accross all levels of participation frquencies, we see responders feeling highly connected to the community, with the highest levels being among those with highest participation frequencies. Feelings about connectedness to community of 4 is pretty rare among all articipation levels, showing responders were somehow confident about how they felt in this regards, and chose either high or low level for their reponse. 
- 
+-   Among responders with lower participation frequency, we see fewer people feeling less connected to the stack overflow community for number of coding years below 30, and accross all levels of participation frquencies, we see responders feeling highly connected to the community, with the highest levels being among those with highest participation frequencies. Feelings about connectedness to community of 4 is pretty rare among all articipation levels, showing responders were somehow confident about how they felt in this regards, and chose either high or low level for their reponse.
 
-<details>
-<summary>View Code</summary> 
+
 
 ```{r}
 stackoverflow <- stackoverflow_survey %>% 
@@ -185,14 +149,5 @@ stackoverflow %>%
   labs(x = "Feelings about belonging to the Stack overflow community", y = "Number of coding years", title = "Feelings about being part of the Stack overflow community by number of coding years with respect to participation levels") +
   theme_gray()
 ```
-
-</details>
-
-
-
-
-
-
-
 
 
