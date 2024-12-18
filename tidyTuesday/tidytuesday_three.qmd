@@ -1,0 +1,413 @@
+---
+title: "Tidy_Tuesdays"
+format: html
+editor: visual
+---
+
+### Loading in necesseary libraries
+
+```{r message=FALSE, results='hide'}
+library(janitor)
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(tidytuesdayR)
+```
+
+
+
+## Data import and cleaning
+
+```{r results='hide', message=FALSE}
+
+tuesdata <- tidytuesdayR::tt_load(2024, week = 36)
+
+stackoverflow_survey<- tuesdata$stackoverflow_survey_single_response
+
+stackoverflow_survey<- stackoverflow_survey %>%
+  select(-survey_length, -survey_ease, -converted_comp_yearly, -remote_work, -years_code_pro, -dev_type, -org_size, -purchase_influence, -buildvs_buy, -currency, -comp_total, -age, -so_account)
+
+stackoverflow_survey %>% summary()
+
+```
+
+### About the data
+
+This week's dataset is derived from the 2024 Stack Overflow Annual Developer Survey. Conducted in May 2024, the survey gathered responses from over 65,000 developers across seven key sections:
+* Basic information
+* Education, work, and career
+* Tech and tech culture
+* Stack overflow community
+* Artificial intelligense (AI)
+* Professional developper Series - Not part of the main survey
+* Thoughts in survey
+
+
+
+### What is the distribution of the responders in terms of Ed level, coding level, and years of coding
+
+- Education levels range from 1 to 8, with 2 and 3 being the most common among responders.
+- Professional coding level range from 1 to 5, with 1 being the most common.
+- Number of years responders have spent coding ranges from 0 to more than 50, with the most commone number of years being between 5 and 20.
+
+<details>
+<summary>View Code</summary>
+
+```{r}
+stackoverflow_survey %>%
+  ggplot(aes(x = ed_level)) +
+  geom_histogram(bins = 30, fill = "blue", color = "black") +
+  labs(title = "Distribution of education level",
+       x = "Education evel",
+       y = "Count")
+
+stackoverflow_survey %>%
+  ggplot(aes(x = main_branch)) +
+  geom_histogram(bins = 30, fill = "blue", color = "black") +
+  labs(title = "Distribution of professional coding level",
+       x = "Professional coding level",
+       y = "Count")
+
+stackoverflow_survey %>%
+  ggplot(aes(x = years_code)) +
+  geom_histogram(bins = 30, fill = "blue", color = "black") +
+  labs(title = "Distribution of coding years",
+       x = "Number of coding years",
+       y = "Count")
+```
+
+</details>
+
+### What is the relation between education level and years of coding, and professional coding level
+
+- Those with the lowest number of coding years, below 10 years, mostly have education level of 4,6, 7 and 8.
+- Participants with a level 5 education level have a more evenly distributed number of coding years.
+- Participants with the least number of Pro-coding years of 1, mostly have education level of 2,3 and 7.
+
+<details>
+<summary>View Code</summary>
+
+```{r}
+stackoverflow_survey %>% 
+  ggplot(aes(x = years_code, fill = as.character(ed_level))) +
+  geom_density(alpha = 0.5) +
+  labs(x = "Number of coding years", title = "Variation in coding years with education level")
+
+stackoverflow_survey %>% 
+  filter(!is.na(ed_level)) %>% 
+  ggplot(aes(x = main_branch, fill = as.character(ed_level))) +
+  geom_density(alpha = 0.5) +
+  labs(x = "Professional coding level", title = "Variation is pro coding level with education level")
+  
+```
+
+</details>
+
+### How does number of coding years relate to stackoverflow particpation frequency and feeling of connectedness with the so community?
+
+- Responders with the highest level of stack overflow participation of 6 are mostly those with between 10 and 35 years of coding experience. 
+- Responders with the coding years above 30 are somewhat evenly distributed at the level of so participation frequency
+- Responders who consider themselves member of the SO community at the highest level of 6 are mostly in the years of coding range of between 5 and 20.
+
+<details>
+<summary>View Code</summary>
+
+```{r}
+stackoverflow_survey %>% 
+  filter(!is.na(so_part_freq)) %>% 
+  ggplot(aes(x = as.factor(so_part_freq), y = years_code)) +
+  geom_boxplot() +
+  labs(x = "SO participation frequency", y = "Number of coding years", title = "Distribution of SO participation with coding years")
+
+stackoverflow_survey %>% 
+  filter(!is.na(so_comm)) %>% 
+  ggplot(aes(x = as.factor(so_comm), y = years_code)) +
+  geom_boxplot() +
+  labs(x = "Feelings about being part of the SO community", y = "Number of coding years", title = "Feelings about being part of the Stack overflow community by number of coding years")
+```
+
+</details>
+
+### How does number of coding years affect stack overflow participation levels and how is this reflected in how responders feel a belonging to the stack overflow community?
+
+- Among responders with lower participation frequency, we see fewer people feeling less connected to the stack overflow community for number of coding years below 30, and accross all levels of participation frquencies, we see responders feeling highly connected to the community, with the highest levels being among those with highest participation frequencies. Feelings about connectedness to community of 4 is pretty rare among all articipation levels, showing responders were somehow confident about how they felt in this regards, and chose either high or low level for their reponse. 
+ 
+
+<details>
+<summary>View Code</summary> 
+
+```{r}
+stackoverflow <- stackoverflow_survey %>% 
+  filter(!is.na(so_comm) & !is.na(so_part_freq)) %>%
+  mutate(so_part_levels = case_when(
+    so_part_freq<3 ~ "Low",
+    so_part_freq>2&so_part_freq<5 ~ "Medium",
+    so_part_freq>4 ~ "High"), 
+        education_lv = case_when(
+    ed_level<5 ~ "Low",
+    ed_level>4 ~ "High"))
+stackoverflow$education_lv <- factor(stackoverflow$education_lv, levels = c("Low", "High"))
+stackoverflow$so_part_levels <- factor(stackoverflow$so_part_levels, levels = c("Low", "Medium", "High"))
+
+
+stackoverflow %>% 
+  na.omit() %>% 
+  ggplot(aes(x = so_comm, y = years_code)) + 
+  geom_jitter(aes(colour = so_part_levels), alpha = 0.5) +
+  facet_wrap(~so_part_levels) +
+  scale_colour_manual(name = "Stackoverflow participation frequency", values = c("black", "orange", "skyblue")) +
+  scale_x_continuous(breaks = 1:6) +
+  labs(x = "Feelings about belonging to the Stack overflow community", y = "Number of coding years", title = "Feelings about being part of the Stack overflow community by number of coding years with respect to participation levels") +
+  theme_gray()
+```
+
+</details>
+
+
+
+
+
+
+## Loading the data
+
+```{r}
+tuesdata <- tidytuesdayR::tt_load(2024, week = 7)
+tuesdata
+historical_spending <- tuesdata$historical_spending
+gifts_age <- tuesdata$gifts_age
+gifts_gender <- tuesdata$gifts_gender
+
+```
+
+
+### Adding a column displaying the changes for different variables
+
+```{r}
+per_person <- historical_spending$PerPerson
+PerPerson <- historical_spending$PerPerson
+for(i in seq_along(PerPerson)){
+  if(i==1){per_person[i] <- 0}else{per_person[i] <- PerPerson[i] - PerPerson[i-1]}
+}
+
+historical_spending <- historical_spending %>% 
+  mutate(change_in_spending = per_person)
+
+
+```
+
+
+
+- The data was collected by the National Retail Federation in the US, by surveying customers on how they planned on celebrating valentine's day. The data I will be using has responses on different amount spent on different gifts or celebrations from 2010 to 2022.
+
+/
+/
+
+### How does the percent of people celebrating valentine's and average spending on celebration change with years?
+
+- The overall percent decrease in number of people celebrating across the whole 12 yr period is approximately 8 percent.
+- The average amount of money spent by each person has increased by approximately $100 over the years, and this might be partly due to inflation. 
+- The largest and most sudden drop in percent of people celebrating was from 2013 to 2014, and in this time period, we see that the average amount of spending by each person has the slightest increase.
+
+
+<details>
+<summary>View Code</summary>
+
+```{r}
+#changes in number of people celebrating over the years
+historical_spending %>%
+  ggplot(aes(x = Year, y = PercentCelebrating)) +
+  geom_point() +
+  geom_line() +
+  scale_x_continuous(breaks = 2010:2022) +
+  labs(title = "Percentage of people celebrating valentine's day over the years",
+       x = "Year",
+       y = "Percentage of people celebrating")
+
+# average spending over the years
+historical_spending %>%
+ggplot(aes(x = Year, y = PerPerson)) +
+  geom_segment(aes(xend = c(tail(Year, n = -1), NA), 
+                   yend = c(tail(PerPerson, n = -1), NA)),
+               arrow = arrow(length = unit(0.4, "cm")),
+               color = 2) +
+  geom_point(size = 2, color = 2) +
+  labs(title = "Changes in average amount spent by each person celebrating Valatines over the years",
+       x = "Year",
+       y = "Average amount spent by each person")
+```
+
+</details>
+
+
+
+### 
+
+<details>
+<summary>View Code</summary>
+
+```{r}
+
+historical_spending %>% 
+  ggplot(aes(x = Year)) +
+  geom_path(aes(y = Candy, color = "Candy"), linewidth = 0.9) +
+  geom_line(aes(y = Flowers, color = "Flowers"), linewidth = 0.9) +
+  geom_line(aes(y = Clothing, color = "Clothing"), linewidth = 0.9) +
+  geom_line(aes(y = GiftCards, color = "Gift cards"), linewidth = 0.9) +
+  geom_vline(aes(xintercept = Year), linetype = 3, color = "darkgrey") +
+  scale_x_continuous(breaks = 2010:2022) +
+  scale_y_continuous(breaks = seq(8,24,by=2)) +
+  labs(y = "Amount spent", title = "Changes in amount spent on different items for valentine's celebration") +
+  geom_text(aes(label = floor(change_in_spending), x = Year - 0.5, y = Candy+4, color = "Change in avr amt spent"), color = "darkgrey", size = 3) +
+  theme_classic()
+
+```
+
+</details>
+
+
+
+## Loading and cleaning the data
+
+<details>
+<summary>View Code</summary>
+
+```{r}
+#loading the data
+tuesdata <- tidytuesdayR::tt_load(2024, week = 4)
+tuesdata
+english_education <- tuesdata$english_education
+
+#cleaning variable names and removing a few
+english_education <- english_education %>% 
+  rename(region11nm = "rgn11nm",
+         job_flag = "job_density_flag",
+         num_pupils = "ks4_2012_2013_counts",
+         full_time_ed = "activity_at_age_19_full_time_higher_education",
+         sustained_further_ed = "activity_at_age_19_sustained_further_education",
+         above_0 = "activity_at_age_19_employment_with_earnings_above_0",
+         above_10k = "activity_at_age_19_employment_with_earnings_above_10_000",
+         ed_lv1 = "highest_level_qualification_achieved_by_age_22_less_than_level_1",
+         ed_lv6 = "highest_level_qualification_achieved_by_age_22_level_6_or_above",
+         ed_lv_avrg = "highest_level_qualification_achieved_b_age_22_average_score") %>% 
+  select(-coastal_detailed, -ttwa11cd, ttwa11nm, -ttwa_classification, -level4qual_residents35_64_2011, -key_stage_2_attainment_school_year_2007_to_2008, -key_stage_4_attainment_school_year_2012_to_2013, -level_2_at_age_18, -level_3_at_age_18, -activity_at_age_19_out_of_work, -highest_level_qualification_achieved_by_age_22_level_1_to_level_2, -highest_level_qualification_achieved_by_age_22_level_3_to_level_5)
+
+```
+
+</details>
+
+### About the data
+- This dataset comes from the UK Office for National Statistics, and has information about population of different towns, along with the number of school attendees, graduatees, and overall educational score or attainment. 
+The dataset classifies various UK towns as small, medium or large, and does same with the income situation of the towns. 
+
+```{r eval=FALSE}
+install.packages("ggbeeswarm")
+```
+
+
+## Basic visializations to better understand the data
+
+### Basic overview of data cases
+
+- Way more non-coastal towns represented
+- Overall ed score in the range -5 - 5
+- way more small towns, followed not closely by medium downs, then a small number of large towns.
+- smaller towns have larger higher educational attainments
+
+<details>
+<summary>View Code</summary>
+
+```{r}
+#what is the distribution of coastal vs non-coastal towns?
+english_education %>% 
+  group_by(coastal) %>% 
+  count()
+
+#what is the education score distribution
+english_education %>% 
+  ggplot(aes(x = education_score)) +
+  geom_histogram()
+
+# what is the distribution of town size
+english_education %>% 
+  group_by(size_flag) %>% 
+  count()
+
+library(ggbeeswarm)
+#what is the ed score and  distribution by town size
+english_education %>% 
+  filter(size_flag %in% c("Small Towns", "Medium Towns", "Large Towns")) %>% 
+  ggplot(aes(x = size_flag, y = education_score)) +
+  geom_beeswarm(color = 4, cex = 1, priority = "random")
+
+```
+
+</details>
+
+
+### How some variables interact
+- There is a subtle relation that shows that the more the number of people with highest ed level below 1 by age 22, the less the number people pursuing full time education by 19.
+- The more the number of people with ed level higher than 6, the more the number of people pursuing full time studies by 19.
+- Interestingly, towns with the highest education score had the lowest number of people with earnings above 10k, and more people with lowest education levels had earnings above 10k.
+
+
+<details>
+<summary>View Code</summary>
+
+```{r warning=FALSE, message=FALSE}
+# how does highest ed level attained relate to full time education at 19 years
+english_education %>% 
+  ggplot(aes(x = ed_lv1, y = full_time_ed)) +
+  geom_point() +
+  geom_smooth() +
+  labs(x = "Education level below 1 by age 22", y = "Full-time education by age 19")
+
+english_education %>% 
+  ggplot(aes(x = ed_lv6, y = full_time_ed)) +
+  geom_point() +
+  geom_smooth() +
+  labs(x = "Education level above 6 by age 22", y = "Full-time education by age 19")
+
+# How does education level relate to other variables
+english_education %>% 
+  ggplot(aes(x = above_10k, y = education_score)) +
+  geom_point() +
+  geom_smooth() +
+  labs(x = "Earnings above 10k", y = "Education score or level")
+
+```
+
+</details>
+
+
+
+```{r}
+# how does the educational score distribution relate to income categories for each town category
+english_education %>% 
+  filter(size_flag %in% c("Small Towns", "Medium Towns", "Large Towns")) %>% 
+  ggplot(aes(x = size_flag, y = education_score)) +
+  geom_beeswarm(color = 4, cex = 1, priority = "random", )
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
